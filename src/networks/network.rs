@@ -1,12 +1,7 @@
+use crate::app::AppResult;
 use iwdrs::netowrk::Network as iwdNetwork;
-use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{
-    app::AppResult,
-    networks::known_network::KnownNetwork, tui::Event
-};
-
-use super::notification::{Notification, NotificationLevel};
+use super::know_network::KnownNetwork;
 
 #[derive(Debug, Clone)]
 pub struct Network {
@@ -41,24 +36,10 @@ impl Network {
         })
     }
 
-    pub async fn connect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn connect(&self) -> AppResult<()> {
         match self.n.connect().await {
-            Ok(_) => Notification::send(
-                format!("Connected to {}", self.name),
-                NotificationLevel::Info,
-                sender,
-            )?,
-            Err(e) => {
-                if e.to_string().contains("net.connman.iwd.Aborted") {
-                    Notification::send(
-                        "Connection canceled".to_string(),
-                        NotificationLevel::Info,
-                        sender,
-                    )?
-                } else {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender)?
-                }
-            }
+            Ok(_) => {},
+            Err(e) => {}
         }
         Ok(())
     }

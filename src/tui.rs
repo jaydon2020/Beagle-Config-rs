@@ -14,7 +14,6 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
-use iwdrs::{modes::Mode, netowrk::Network, session::Session};
 use ratatui::backend::CrosstermBackend as Backend;
 use serde::{Deserialize, Serialize};
 use tokio::{
@@ -25,9 +24,7 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 
-use crate::{app::AppResult, networks::{notification::{Notification, NotificationLevel}, station::Station}};
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum Event {
     Init,
     Quit,
@@ -37,14 +34,10 @@ pub enum Event {
     Render,
     FocusGained,
     FocusLost,
-    ScanComplete,
     Paste(String),
     Key(KeyEvent),
     Mouse(MouseEvent),
     Resize(u16, u16),
-    Notification(Notification),
-    Reset(Mode),
-    ScanError(Option<String>)
 }
 
 pub struct Tui {

@@ -2,26 +2,24 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use iwdrs::{device::Device as iwdDevice, modes::Mode, session::Session};
-use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{
-    app::AppResult, networks::{access_point::AccessPoint, notification::Notification, station::Station}, tui::Event
-};
+use crate::app::AppResult;
+
+use super::station::Station;
 
 #[derive(Debug, Clone)]
 pub struct Device {
-    session: Arc<Session>,
+    pub session: Arc<Session>,
     pub device: iwdDevice,
     pub name: String,
     pub address: String,
     pub mode: Mode,
     pub is_powered: bool,
     pub station: Option<Station>,
-    pub access_point: Option<AccessPoint>,
 }
 
 impl Device {
-    pub async fn new(session: Arc<Session>, sender: UnboundedSender<Event>) -> AppResult<Self> {
+    pub async fn new(session: Arc<Session>) -> AppResult<Self> {
         let device = session.device().context("No device found")?;
 
         let name = device.name().await?;
@@ -33,33 +31,13 @@ impl Device {
             Some(_) => match Station::new(session.clone()).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    Notification::send(
-                        e.to_string(),
-                        crate::networks::notification::NotificationLevel::Error,
-                        sender.clone(),
-                    )?;
                     None
                 }
             },
             None => None,
         };
-
-        let access_point = match session.access_point() {
-            Some(_) => match AccessPoint::new(session.clone()).await {
-                Ok(v) => Some(v),
-                Err(e) => {
-                    Notification::send(
-                        e.to_string(),
-                        crate::networks::notification::NotificationLevel::Error,
-                        sender,
-                    )?;
-                    None
-                }
-            },
-            None => None,
-        };
-
-        Ok(Self {
+        
+        Ok(Device {
             session,
             device,
             name,
@@ -67,26 +45,10 @@ impl Device {
             mode,
             is_powered,
             station,
-            access_point,
         })
     }
 
-    pub async fn set_mode(&self, mode: Mode) -> AppResult<()> {
-        self.device.set_mode(mode).await?;
-        Ok(())
-    }
-
-    pub async fn power_off(&self) -> AppResult<()> {
-        self.device.set_power(false).await?;
-        Ok(())
-    }
-
-    pub async fn power_on(&self) -> AppResult<()> {
-        self.device.set_power(true).await?;
-        Ok(())
-    }
-
-    pub async fn refresh(&mut self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn refresh(&mut self) -> AppResult<()> {
         self.is_powered = self.device.is_powered().await?;
         let current_mode = self.device.get_mode().await?;
 
@@ -101,16 +63,16 @@ impl Device {
                     }
                     Mode::Ap => {
                         // Switch mode from ap to station
-                        self.access_point = None;
+                        // self.access_point = None;
                         self.station = match self.session.station() {
                             Some(_) => match Station::new(self.session.clone()).await {
                                 Ok(v) => Some(v),
                                 Err(e) => {
-                                    Notification::send(
-                                        e.to_string(),
-                                        crate::networks::notification::NotificationLevel::Error,
-                                        sender,
-                                    )?;
+                                    // Notification::send(
+                                    //     e.to_string(),
+                                    //     crate::notification::NotificationLevel::Error,
+                                    //     sender,
+                                    // )?;
                                     None
                                 }
                             },
@@ -124,26 +86,26 @@ impl Device {
                 match self.mode {
                     Mode::Station => {
                         self.station = None;
-                        self.access_point = match self.session.access_point() {
-                            Some(_) => match AccessPoint::new(self.session.clone()).await {
-                                Ok(v) => Some(v),
-                                Err(e) => {
-                                    Notification::send(
-                                        e.to_string(),
-                                        crate::networks::notification::NotificationLevel::Error,
-                                        sender,
-                                    )?;
-                                    None
-                                }
-                            },
-                            None => None,
-                        };
+                        // self.access_point = match self.session.access_point() {
+                        //     Some(_) => match AccessPoint::new(self.session.clone()).await {
+                        //         Ok(v) => Some(v),
+                        //         Err(e) => {
+                        //             Notification::send(
+                        //                 e.to_string(),
+                        //                 crate::notification::NotificationLevel::Error,
+                        //                 sender,
+                        //             )?;
+                        //             None
+                        //         }
+                        //     },
+                        //     None => None,
+                        // };
                     }
                     Mode::Ap => {
                         // Switch mode
-                        if self.access_point.is_some() {
-                            self.access_point.as_mut().unwrap().refresh().await?;
-                        }
+                        // if self.access_point.is_some() {
+                        //     self.access_point.as_mut().unwrap().refresh().await?;
+                        // }
                     }
                     _ => {}
                 }

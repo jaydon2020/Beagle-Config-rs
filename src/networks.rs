@@ -1,9 +1,6 @@
 pub mod rfkill;
-pub mod adapter;
+pub mod adaptor;
 pub mod device;
-pub mod access_point;
-pub mod known_network;
-pub mod notification;
 pub mod station;
-pub mod auth;
 pub mod network;
+pub mod know_network;

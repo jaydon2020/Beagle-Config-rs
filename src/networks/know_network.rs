@@ -1,12 +1,7 @@
 use chrono::{DateTime, FixedOffset};
 use iwdrs::known_netowk::KnownNetwork as iwdKnownNetwork;
 
-use tokio::sync::mpsc::UnboundedSender;
-
-use crate::{
-    app::AppResult,
-    networks::notification::{Notification, NotificationLevel}, tui::Event,
-};
+use crate::app::AppResult;
 
 #[derive(Debug, Clone)]
 pub struct KnownNetwork {
@@ -39,45 +34,30 @@ impl KnownNetwork {
         })
     }
 
-    pub async fn forget(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn forget(&self) -> AppResult<()> {
         if let Err(e) = self.n.forget().await {
-            Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
             return Ok(());
         }
-
-        Notification::send(
-            "Network Removed".to_string(),
-            NotificationLevel::Info,
-            sender,
-        )?;
         Ok(())
     }
 
-    pub async fn toggle_autoconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
+    pub async fn toggle_autoconnect(&self) -> AppResult<()> {
         if self.is_autoconnect {
             match self.n.set_autoconnect(false).await {
                 Ok(_) => {
-                    Notification::send(
-                        format!("Disable Autoconnect for: {}", self.name),
-                        NotificationLevel::Info,
-                        sender.clone(),
-                    )?;
+
                 }
                 Err(e) => {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+
                 }
             }
         } else {
             match self.n.set_autoconnect(true).await {
                 Ok(_) => {
-                    Notification::send(
-                        format!("Enable Autoconnect for: {}", self.name),
-                        NotificationLevel::Info,
-                        sender.clone(),
-                    )?;
+
                 }
                 Err(e) => {
-                    Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?;
+
                 }
             }
         }

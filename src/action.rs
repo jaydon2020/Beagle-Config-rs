@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
-#[derive(Debug, Clone, PartialEq, Eq, Display, Serialize, Deserialize)]
+use crate::components::views::wifi::ImplWiFi;
+
+#[derive(Debug, Clone, PartialEq, Display, Serialize, Deserialize)]
 pub enum Action {
     Tick,
     Render,
@@ -14,4 +16,6 @@ pub enum Action {
     Help,
     BackToMenu,
     ScanComplete,
+    #[serde(skip)]
+    UpdateWifiState(ImplWiFi),
 }

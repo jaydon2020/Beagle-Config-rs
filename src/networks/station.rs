@@ -3,13 +3,10 @@ use std::{collections::HashMap, sync::Arc};
 use futures::future::join_all;
 use iwdrs::session::Session;
 use ratatui::widgets::TableState;
-use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{
-    app::AppResult,
-    networks::{network::Network, notification::{Notification, NotificationLevel}},
-    tui::Event,
-};
+use crate::app::AppResult;
+
+use super::network::Network;
 
 #[derive(Debug, Clone)]
 pub struct Station {
@@ -30,6 +27,7 @@ impl Station {
         let iwd_station_diagnostic = session.station_diagnostic();
 
         let state = iwd_station.state().await?;
+        
         let connected_network = {
             if let Some(n) = iwd_station.connected_network().await? {
                 let network = Network::new(n.clone()).await?;
@@ -92,7 +90,7 @@ impl Station {
             }
         }
 
-        Ok(Self {
+        Ok(Station {
             session,
             state,
             is_scanning,
@@ -207,33 +205,13 @@ impl Station {
         Ok(())
     }
 
-    pub async fn scan(&self, sender: UnboundedSender<Event>) -> color_eyre::Result<()> {
+    pub async fn scan(&self) -> AppResult<()> {
         let iwd_station = self.session.station().unwrap();
         match iwd_station.scan().await {
-            Ok(_) => Notification::send(
-                "Start Scanning".to_string(),
-                NotificationLevel::Info,
-                sender,
-            ).unwrap(),
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone()).unwrap(),
+            Ok(_) => {}
+            Err(e) => {}
         }
 
-        Ok(())
-    }
-
-    pub async fn disconnect(&self, sender: UnboundedSender<Event>) -> AppResult<()> {
-        let iwd_station = self.session.station().unwrap();
-        match iwd_station.disconnect().await {
-            Ok(_) => Notification::send(
-                format!(
-                    "Disconnected from {}",
-                    self.connected_network.as_ref().unwrap().name
-                ),
-                NotificationLevel::Info,
-                sender,
-            )?,
-            Err(e) => Notification::send(e.to_string(), NotificationLevel::Error, sender.clone())?,
-        }
         Ok(())
     }
 }

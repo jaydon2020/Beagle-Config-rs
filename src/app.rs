@@ -10,7 +10,7 @@ use tracing::{debug, info};
 pub type AppResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
 use crate::{
-    action::Action, components::{fps::FpsCounter, home::Home, Component}, config::Config, networks::notification::{Notification, NotificationLevel}, tui::{Event, Tui}
+    action::Action, components::{fps::FpsCounter, home::Home, Component}, config::Config, tui::{Event, Tui}
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -44,8 +44,6 @@ pub struct App {
     last_tick_key_events: Vec<KeyEvent>,
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
-    event_tx: mpsc::UnboundedSender<Event>,
-    event_rx: mpsc::UnboundedReceiver<Event>,
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -57,7 +55,6 @@ pub enum Mode {
 impl App {
     pub async fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();
-        let (event_tx, event_rx) = mpsc::unbounded_channel();
         Ok(Self {
             tick_rate,
             frame_rate,
@@ -69,8 +66,6 @@ impl App {
             last_tick_key_events: Vec::new(),
             action_tx,
             action_rx,
-            event_tx,
-            event_rx,
         })
     }
 

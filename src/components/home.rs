@@ -40,7 +40,7 @@ impl Home {
                 MenuGroup {
                     name: String::from("Audio"),
                     component: vec![
-                        Box::new(WifiView::init(sender.clone()).await),
+                        Box::new(WifiView::init(sender).await),
                         Box::new(TestViewComponent::new("Item5")),
                         Box::new(TestViewComponent::new("Item6")),
                     ],
@@ -159,6 +159,14 @@ impl Component for Home {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
+        if self.active {
+            if let Some(selected_group) = self.menu_state.selected() {
+                if let Some(selected_item) = self.menu_list[selected_group].state.selected() {
+                    return self.menu_list[selected_group].component[selected_item]
+                        .update(action);
+                }
+            }
+        }
         match action {
             Action::Tick => {
                 // add any logic here that should run on every tick
