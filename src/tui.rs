@@ -1,9 +1,7 @@
 #![allow(dead_code)] // Remove this once you start using the code
 
 use std::{
-    io::{stdout, Stdout},
-    ops::{Deref, DerefMut},
-    time::Duration,
+    io::{stdout, Stdout}, ops::{Deref, DerefMut}, sync::Arc, time::Duration
 };
 
 use color_eyre::Result;
@@ -16,6 +14,7 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 use futures::{FutureExt, StreamExt};
+use iwdrs::{modes::Mode, netowrk::Network, session::Session};
 use ratatui::backend::CrosstermBackend as Backend;
 use serde::{Deserialize, Serialize};
 use tokio::{
@@ -26,7 +25,9 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+use crate::{app::AppResult, networks::{notification::{Notification, NotificationLevel}, station::Station}};
+
+#[derive(Clone, Debug)]
 pub enum Event {
     Init,
     Quit,
@@ -36,10 +37,14 @@ pub enum Event {
     Render,
     FocusGained,
     FocusLost,
+    ScanComplete,
     Paste(String),
     Key(KeyEvent),
     Mouse(MouseEvent),
     Resize(u16, u16),
+    Notification(Notification),
+    Reset(Mode),
+    ScanError(Option<String>)
 }
 
 pub struct Tui {
@@ -146,7 +151,7 @@ impl Tui {
         }
         cancellation_token.cancel();
     }
-
+    
     pub fn stop(&self) -> Result<()> {
         self.cancel();
         let mut counter = 0;

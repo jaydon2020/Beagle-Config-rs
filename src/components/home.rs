@@ -3,8 +3,8 @@ use crossterm::event::KeyEventKind;
 use ratatui::{prelude::*, style::palette::tailwind::SLATE, widgets::*};
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::{views::{password::PasswordView, ssh::SshView, test::TestViewComponent, ViewComponent, locale::LocaleView}, Component};
-use crate::{action::Action, config::Config, widgets::{ButtonState, TextButtonWidget}};
+use super::{views::{TestViewComponent, LocaleView, PasswordView, SshView, ViewComponent, WifiView}, Component};
+use crate::{action::Action, config::Config, tui::Event, widgets::{ButtonState, TextButtonWidget}};
 
 // #[derive(Default)]
 pub struct Home {
@@ -23,7 +23,7 @@ struct MenuGroup {
 }
 
 impl Home {
-    pub fn new() -> Self {
+    pub async fn new(sender: UnboundedSender<Action>) -> Self {
         Self {
             command_tx: None, 
             config: Config::default(),
@@ -40,7 +40,7 @@ impl Home {
                 MenuGroup {
                     name: String::from("Audio"),
                     component: vec![
-                        Box::new(TestViewComponent::new("Item4")),
+                        Box::new(WifiView::init(sender.clone()).await),
                         Box::new(TestViewComponent::new("Item5")),
                         Box::new(TestViewComponent::new("Item6")),
                     ],
@@ -168,7 +168,6 @@ impl Component for Home {
             }
             Action::BackToMenu => {
                 self.active = false;
-                // return Ok(Some(Action::Quit));
             }
             _ => {}
         }
@@ -180,7 +179,6 @@ impl Component for Home {
             return Ok(None);
         }
         if self.active {
-            // if key.code == crossterm::event::KeyCode::Backspace { self.active = false };
             if let Some(selected_group) = self.menu_state.selected() {
                 if let Some(selected_item) = self.menu_list[selected_group].state.selected() {
                     return self.menu_list[selected_group].component[selected_item]

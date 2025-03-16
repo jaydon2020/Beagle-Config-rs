@@ -12,6 +12,7 @@ pub struct ButtonWidget<'a> {
     state: ButtonState,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonState {
     Normal,

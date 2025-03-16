@@ -10,7 +10,10 @@ build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.90"
+async-channel = "2.3.1"
 better-panic = "0.3.0"
+chrono = "0.4.40"
 clap = { version = "4.5.20", features = [
     "derive",
     "cargo",
@@ -26,6 +29,7 @@ derive_deref = "1.1.1"
 directories = "5.0.1"
 futures = "0.3.31"
 human-panic = "2.0.2"
+iwdrs = "0.1.5"
 json5 = "0.4.1"
 lazy_static = "1.5.0"
 libc = "0.2.161"
@@ -42,6 +46,8 @@ tokio-util = "0.7.12"
 tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
+tui-input = "0.11.1"
+whoami = "1.5.2"
 
 
 [build-dependencies]

@@ -1,16 +1,37 @@
+use std::{error::Error, sync::Arc};
 use color_eyre::Result;
 use crossterm::event::KeyEvent;
+use iwdrs::session::Session;
 use ratatui::prelude::Rect;
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc;
+use tokio::sync::mpsc::{self, UnboundedSender};
 use tracing::{debug, info};
 
+pub type AppResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
+
 use crate::{
-    action::Action,
-    components::{fps::FpsCounter, home::Home, Component},
-    config::Config,
-    tui::{Event, Tui},
+    action::Action, components::{fps::FpsCounter, home::Home, Component}, config::Config, networks::notification::{Notification, NotificationLevel}, tui::{Event, Tui}
 };
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FocusedBlock {
+    Device,
+    Station,
+    AccessPoint,
+    KnownNetworks,
+    NewNetworks,
+    Help,
+    AuthKey,
+    AdapterInfos,
+    AccessPointInput,
+    AccessPointConnectedDevices,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ColorMode {
+    Dark,
+    Light,
+}
 
 pub struct App {
     config: Config,
@@ -23,6 +44,8 @@ pub struct App {
     last_tick_key_events: Vec<KeyEvent>,
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
+    event_tx: mpsc::UnboundedSender<Event>,
+    event_rx: mpsc::UnboundedReceiver<Event>,
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -32,12 +55,13 @@ pub enum Mode {
 }
 
 impl App {
-    pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
+    pub async fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();
+        let (event_tx, event_rx) = mpsc::unbounded_channel();
         Ok(Self {
             tick_rate,
             frame_rate,
-            components: vec![Box::new(Home::new()), Box::new(FpsCounter::default())],
+            components: vec![Box::new(Home::new(action_tx.clone()).await), Box::new(FpsCounter::default())],
             should_quit: false,
             should_suspend: false,
             config: Config::new()?,
@@ -45,6 +69,8 @@ impl App {
             last_tick_key_events: Vec::new(),
             action_tx,
             action_rx,
+            event_tx,
+            event_rx,
         })
     }
 
@@ -83,7 +109,7 @@ impl App {
         tui.exit()?;
         Ok(())
     }
-
+    
     async fn handle_events(&mut self, tui: &mut Tui) -> Result<()> {
         let Some(event) = tui.next_event().await else {
             return Ok(());

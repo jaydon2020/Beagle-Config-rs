@@ -1,8 +1,7 @@
 use ratatui::{
     style::{Color, Modifier, Style, Stylize},
-    text::{Line, Span},
-    widgets::{Block, Borders, Padding, Widget},
-    symbols::{self, line},
+    widgets::{Block, Widget},
+    symbols::{self},
 };
 use crossterm::event::{KeyCode, MouseEventKind};
 
@@ -73,10 +72,12 @@ impl<'a> Switch<'a> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn state(&self) -> SwitchState {
         self.state
     }
 
+    #[allow(dead_code)]
     pub fn set_state(&mut self, state: SwitchState) -> &mut Self {
         if !self.is_disabled {
             self.state = state;
@@ -84,6 +85,7 @@ impl<'a> Switch<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn toggle(&mut self) -> &mut Self {
         if !self.is_disabled {
             self.state = match self.state {
@@ -99,16 +101,19 @@ impl<'a> Switch<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn focused(mut self, focused: bool) -> Self {
         self.is_focused = focused;
         self
     }
 
+    #[allow(dead_code)]
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.is_disabled = disabled;
         self
     }
 
+    #[allow(dead_code)]
     pub fn styles(mut self, styles: SwitchStyles) -> Self {
         self.styles = styles;
         self
@@ -119,6 +124,7 @@ impl<'a> Switch<'a> {
         self
     }
 
+    #[allow(dead_code)]
     pub fn handle_input(&mut self, key: KeyCode) -> bool {
         if self.is_disabled {
             return false;
@@ -141,6 +147,7 @@ impl<'a> Switch<'a> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn handle_mouse(&mut self, mouse: MouseEventKind, x: u16, y: u16, area: ratatui::prelude::Rect) -> bool {
         if self.is_disabled {
             return false;
@@ -160,6 +167,7 @@ impl<'a> Switch<'a> {
         false
     }
 
+    #[allow(dead_code)]
     fn calculate_base_width(&self) -> u16 {
         let (on, off) = &self.labels;
         let text_width = on.chars().count().max(off.chars().count()) as u16;
@@ -179,7 +187,6 @@ impl<'a> Widget for Switch<'a> {
             return;
         }
 
-        let render_area = area;
         let block = self.block.clone().unwrap_or_default();
         let inner_area = block.inner(area);
         

@@ -36,7 +36,7 @@ impl ViewComponent for LocaleView {
         Ok(None)
     }
 
-    fn draw(&self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([

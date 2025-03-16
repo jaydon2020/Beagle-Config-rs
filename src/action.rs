@@ -13,4 +13,5 @@ pub enum Action {
     Error(String),
     Help,
     BackToMenu,
+    ScanComplete,
 }

@@ -8,10 +8,13 @@ pub mod test;
 pub mod password;
 pub mod ssh;
 pub mod locale;
+pub mod wifi;
 
 pub use password::PasswordView;
 pub use ssh::SshView;
 pub use locale::LocaleView;
+pub use wifi::WifiView;
+pub use test::TestViewComponent;
 
 pub trait ViewComponent {
     fn title(&self) -> &str;
@@ -29,8 +32,9 @@ pub trait ViewComponent {
         Ok(None)
     }
     #[allow(unused_variables)]
+    #[allow(dead_code)]
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         Ok(None)
     }
-    fn draw(&self, f: &mut Frame<'_>, area: Rect) -> Result<()>;
+    fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()>;
 }

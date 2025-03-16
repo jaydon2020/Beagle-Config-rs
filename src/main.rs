@@ -1,6 +1,7 @@
 use clap::Parser;
 use cli::Cli;
 use color_eyre::Result;
+use networks::rfkill;
 
 use crate::app::App;
 
@@ -13,6 +14,7 @@ mod errors;
 mod logging;
 mod tui;
 mod widgets;
+mod networks;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,7 +22,10 @@ async fn main() -> Result<()> {
     crate::logging::init()?;
 
     let args = Cli::parse();
-    let mut app = App::new(args.tick_rate, args.frame_rate)?;
+
+    rfkill::check()?;
+    
+    let mut app = App::new(args.tick_rate, args.frame_rate).await?;
     app.run().await?;
     Ok(())
 }

@@ -101,7 +101,7 @@ impl ViewComponent for SshView {
         Ok(None)
     }
 
-    fn draw(&self, f: &mut ratatui::Frame<'_>, area: Rect) -> Result<()> {
+    fn draw(&mut self, f: &mut ratatui::Frame<'_>, area: Rect) -> Result<()> {
         let area = Block::new().padding(Padding::horizontal(2)).inner(area);
         let [status_area, button_area, back_area] = Layout::default()
             .direction(Direction::Vertical)
