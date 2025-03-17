@@ -264,7 +264,7 @@ impl Component for Home {
         frame.render_widget(&config_block, config_area);
 
         let instruction = 
-            Paragraph::new("Use ↓↑ to move, BackSpace to unselect, Enter to change status, g/G to go top/bottom.")
+            Paragraph::new("Use ↓↑ to move, BackSpace to Menu, Enter to Select, Crt-c to Exit")
                 .centered();
         frame.render_widget(&instruction, footer_area);
 
