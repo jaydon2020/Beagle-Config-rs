@@ -3,8 +3,8 @@ use crossterm::event::KeyEventKind;
 use ratatui::{prelude::*, style::palette::tailwind::SLATE, widgets::*};
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::{views::{TestViewComponent, LocaleView, PasswordView, SshView, ViewComponent, WifiView}, Component};
-use crate::{action::Action, config::Config, tui::Event, widgets::{ButtonState, TextButtonWidget}};
+use super::{views::{LocaleView, PasswordView, PinOut, SshView, TestViewComponent, ViewComponent, WifiView}, Component};
+use crate::{action::Action, config::Config, widgets::{ButtonState, TextButtonWidget}};
 
 // #[derive(Default)]
 pub struct Home {
@@ -38,25 +38,25 @@ impl Home {
                     state: ListState::default(),
                 },
                 MenuGroup {
-                    name: String::from("Audio"),
+                    name: String::from("Interface"),
                     component: vec![
-                        Box::new(WifiView::init(sender).await),
-                        Box::new(TestViewComponent::new("Item5")),
-                        Box::new(TestViewComponent::new("Item6")),
+                        // Box::new(WifiView::init(sender).await),
+                        Box::new(PinOut::init()),
+                        // Box::new(TestViewComponent::new("Item6")),
                     ],
                     state: ListState::default(),
                 },
                 MenuGroup {
                     name: String::from("Network"),
                     component: vec![
-                        Box::new(TestViewComponent::new("Item7")),
-                        Box::new(TestViewComponent::new("Item8")),
-                        Box::new(TestViewComponent::new("Item9")),
+                        Box::new(WifiView::init(sender).await),
+                        // Box::new(TestViewComponent::new("Item8")),
+                        // Box::new(TestViewComponent::new("Item9")),
                     ],
                     state: ListState::default(),
                 },
                 MenuGroup {
-                    name: String::from("Experiment"),
+                    name: String::from("About"),
                     component: vec![
                         Box::new(TestViewComponent::new("Item10")),
                         Box::new(TestViewComponent::new("Item11")),
@@ -159,14 +159,6 @@ impl Component for Home {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        if self.active {
-            if let Some(selected_group) = self.menu_state.selected() {
-                if let Some(selected_item) = self.menu_list[selected_group].state.selected() {
-                    return self.menu_list[selected_group].component[selected_item]
-                        .update(action);
-                }
-            }
-        }
         match action {
             Action::Tick => {
                 // add any logic here that should run on every tick
@@ -179,6 +171,16 @@ impl Component for Home {
             }
             _ => {}
         }
+
+        if self.active {
+            if let Some(selected_group) = self.menu_state.selected() {
+                if let Some(selected_item) = self.menu_list[selected_group].state.selected() {
+                    return self.menu_list[selected_group].component[selected_item]
+                        .update(action);
+                }
+            }
+        }
+        
         Ok(None)
     }
 

@@ -1,7 +1,6 @@
 use clap::Parser;
 use cli::Cli;
 use color_eyre::Result;
-use networks::rfkill;
 
 use crate::app::App;
 
@@ -22,8 +21,6 @@ async fn main() -> Result<()> {
     crate::logging::init()?;
 
     let args = Cli::parse();
-
-    rfkill::check()?;
     
     let mut app = App::new(args.tick_rate, args.frame_rate).await?;
     app.run().await?;

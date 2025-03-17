@@ -74,7 +74,7 @@ impl<'a> Widget for ButtonWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let style = match self.state {
             ButtonState::Normal => Style::new(),
-            ButtonState::Selected => Style::new().bg(Color::Yellow),
+            ButtonState::Selected => Style::new().bg(SLATE.c500),
             ButtonState::Active => Style::new(),
         };
         Paragraph::new(Line::raw(&self.label.to_string()).centered())

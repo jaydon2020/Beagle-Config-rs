@@ -9,12 +9,14 @@ pub mod password;
 pub mod ssh;
 pub mod locale;
 pub mod wifi;
+pub mod pinout;
 
 pub use password::PasswordView;
 pub use ssh::SshView;
 pub use locale::LocaleView;
 pub use wifi::WifiView;
 pub use test::TestViewComponent;
+pub use pinout::PinOut;
 
 pub trait ViewComponent {
     fn title(&self) -> &str;

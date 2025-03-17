@@ -10,7 +10,7 @@ use color_eyre::Result;
 use strum::Display;
 use tokio::sync::mpsc::{self, UnboundedSender};
 
-use crate::{action::Action, app::AppResult, networks::{adaptor::Adapter, network::Network}, widgets::{ButtonState, ButtonWidget}};
+use crate::{action::Action, app::AppResult, networks::{adaptor::Adapter, network::Network, rfkill}, widgets::{ButtonState, ButtonWidget}};
 
 use super::ViewComponent;
 
@@ -79,6 +79,11 @@ pub async fn request_confirmation(
 
 impl WifiView {
     pub async fn init(sender: mpsc::UnboundedSender<Action>) -> Self {
+        match rfkill::check() {
+            Ok(_) => {},
+            Err(e) => return Self::error_state(e),
+        };
+        
         let session = {
             match iwdrs::session::Session::new().await {
                 Ok(session) => Arc::new(session),
@@ -346,6 +351,7 @@ impl ViewComponent for WifiView {
                 .direction(Direction::Vertical)
                 .constraints([
                     Constraint::Length(3),  // Header
+                    Constraint::Length(5),  // Know Network List
                     Constraint::Min(3),     // Network list
                     Constraint::Length(3), // Status bar
                 ])
@@ -360,6 +366,46 @@ impl ViewComponent for WifiView {
             )
                 .state(self.scan_button_state);
 
+            // Know Network List
+            let know_network = self.iwd_wifi.as_ref().unwrap().adapter.device.station.as_ref()
+                    .map(|station| {
+                        let mut networks = station.known_networks.clone();
+                        networks.sort_by(|a, b| b.1.cmp(&a.1)); // Descending sort by signal
+                        networks
+                    })
+                    .unwrap_or_default();
+
+            let items: Vec<ListItem> = know_network
+                .iter()
+                .enumerate()
+                .map(|(i, (net, signal))| {
+                    let line = Line::from(vec![
+                        format!("{}    ", net.name).into(),
+                        Span::raw({
+                            let signal = {
+                                if *signal / 100 >= -50 {
+                                    100
+                                } else {
+                                    2 * (100 + signal / 100)
+                                }
+                            };
+                            match signal {
+                                n if n >= 75 => format!("{:3}% 󰤨", signal),
+                                n if (50..75).contains(&n) => format!("{:3}% 󰤥", signal),
+                                n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
+                                _ => format!("{:3}% 󰤟", signal),
+                            }
+                }       ),
+                    ]);
+
+                    ListItem::new(line).style(Style::default())
+                })
+                .collect();
+
+            let know_list = List::new(items)
+                .block(Block::default().borders(Borders::ALL).title("Known Networks"))
+                .highlight_style(Style::default().bg(Color::DarkGray));
+
             // Network List
             let items: Vec<ListItem> = self.sorted_networks
                 .iter()
@@ -373,16 +419,35 @@ impl ViewComponent for WifiView {
                         Style::default()
                     };
                     
-                    let text = format!("{} ({}%)", net.name, signal);
-                    ListItem::new(text).style(style)
+                    let line = Line::from(vec![
+                        format!("{}    ", net.name).into(),
+                        Span::raw({
+                            let signal = {
+                                if *signal / 100 >= -50 {
+                                    100
+                                } else {
+                                    2 * (100 + signal / 100)
+                                }
+                            };
+                            match signal {
+                                n if n >= 75 => format!("{:3}% 󰤨", signal),
+                                n if (50..75).contains(&n) => format!("{:3}% 󰤥", signal),
+                                n if (25..50).contains(&n) => format!("{:3}% 󰤢", signal),
+                                _ => format!("{:3}% 󰤟", signal),
+                            }
+                        }),
+                    ]);
+
+                    ListItem::new(line).style(style)
                 })
                 .collect();
 
             let list = List::new(items)
                 .block(Block::default().borders(Borders::ALL).title("Networks"))
                 .highlight_style(Style::default().bg(Color::DarkGray));
-
-            f.render_stateful_widget(list, layout[1], &mut self.list_state);
+            
+            f.render_widget(know_list, layout[1]);
+            f.render_stateful_widget(list, layout[2], &mut self.list_state);
             f.render_widget(scan_btn, layout[0]);
         }
         else {
